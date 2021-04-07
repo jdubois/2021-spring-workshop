@@ -66,5 +66,6 @@ az spring-cloud app create \
     -g "$AZ_RESOURCE_GROUP" \
     -s "$AZ_SPRING_CLOUD_NAME" \
     -n person-service \
+    --runtime-version Java_11 \
     --assign-endpoint true \
     | jq
