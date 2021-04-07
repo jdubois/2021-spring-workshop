@@ -17,34 +17,54 @@ az group create \
     | jq
 
 echo "-----------------------------------------------------"
+echo "Creating CosmosDB cluster"
+az cosmosdb create \
+    -n "cosmos-$AZ_SPRING_CLOUD_NAME" \
+    -g "$AZ_RESOURCE_GROUP" \
+    --kind MongoDB \
+    | jq
+
+az cosmosdb mongodb database create \
+    -a "cosmos-$AZ_SPRING_CLOUD_NAME" \
+    -g "$AZ_RESOURCE_GROUP" \
+    -n "db-$AZ_SPRING_CLOUD_NAME" \
+    | jq
+
+az cosmosdb mongodb collection create \
+    -a "cosmos-$AZ_SPRING_CLOUD_NAME" \
+    -g "$AZ_RESOURCE_GROUP" \
+    -d "db-$AZ_SPRING_CLOUD_NAME" \
+    -n "Person" \
+    --shard 'id' \
+    --throughput 400 \
+    | jq
+
+echo "-----------------------------------------------------"
 echo "Creating Azure Spring Cloud cluster"
 
 az spring-cloud create \
     -g "$AZ_RESOURCE_GROUP" \
     -n "$AZ_SPRING_CLOUD_NAME" \
-    -l $AZ_LOCATION \
+    -l "$AZ_LOCATION" \
     --enable-java-agent \
     --sku standard \
+    | jq
+
+echo "-----------------------------------------------------"
+echo "Configure config server"
+az spring-cloud config-server git repo add \
+    -g "$AZ_RESOURCE_GROUP" \
+    -n "$AZ_SPRING_CLOUD_NAME" \
+    --repo-name "spring-cloud-sample-public-config" \
+    --uri https://github.com/Azure-Samples/spring-cloud-sample-public-config.git \
     | jq
 
 echo "-----------------------------------------------------"
 echo "Creating Azure Spring Cloud application"
 
 az spring-cloud app create \
-    -n person-service \
     -g "$AZ_RESOURCE_GROUP" \
-    -n "$AZ_SPRING_CLOUD_NAME" \
+    -s "$AZ_SPRING_CLOUD_NAME" \
+    -n person-service \
     --assign-endpoint true \
-    | jq
-
-echo "-----------------------------------------------------"
-echo "Deploying Azure Spring Cloud application"
-
-./mvnw package
-
-az spring-cloud app deploy \
-    -g "$AZ_RESOURCE_GROUP" \
-    -n "$AZ_SPRING_CLOUD_NAME" \
-    -n person-service \
-    --jar-path target/demo-0.0.1-SNAPSHOT.jar \
     | jq
