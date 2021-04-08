@@ -18,18 +18,22 @@ az group create \
 
 echo "-----------------------------------------------------"
 echo "Creating CosmosDB cluster"
-az cosmosdb create \
+export DATABASE_ID=$(az cosmosdb create \
     -n "cosmos-$AZ_SPRING_CLOUD_NAME" \
     -g "$AZ_RESOURCE_GROUP" \
     --kind MongoDB \
-    | jq
+    | jq -r '.id')
 
+echo "-----------------------------------------------------"
+echo "Creating CosmosDB database"
 az cosmosdb mongodb database create \
     -a "cosmos-$AZ_SPRING_CLOUD_NAME" \
     -g "$AZ_RESOURCE_GROUP" \
     -n "db-$AZ_SPRING_CLOUD_NAME" \
     | jq
 
+echo "-----------------------------------------------------"
+echo "Creating CosmosDB collection"
 az cosmosdb mongodb collection create \
     -a "cosmos-$AZ_SPRING_CLOUD_NAME" \
     -g "$AZ_RESOURCE_GROUP" \
@@ -69,3 +73,18 @@ az spring-cloud app create \
     --runtime-version Java_11 \
     --assign-endpoint true \
     | jq
+
+echo "-----------------------------------------------------"
+echo "Bind CosmosDB to the Spring Cloud application"
+
+az spring-cloud app binding cosmos add \
+    -g "$AZ_RESOURCE_GROUP" \
+    -s "$AZ_SPRING_CLOUD_NAME" \
+    -n person-database \
+    --app person-service \
+    --resource-id "$DATABASE_ID" \
+    --database-name "cosmos-$AZ_SPRING_CLOUD_NAME" \
+    --api-type mongo \
+    | jq
+
+
