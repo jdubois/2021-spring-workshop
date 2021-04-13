@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 docker run \
+  -p 8080:8080 \
   -e "spring.data.mongodb.uri=mongodb://host.docker.internal/test" \
   -e "spring.config.import=configserver:http://host.docker.internal:8888" \
   -e "eureka.client.serviceUrl.defaultZone=http://host.docker.internal:8761/eureka/" \

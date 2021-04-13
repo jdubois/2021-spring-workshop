@@ -17,18 +17,26 @@ import reactor.core.publisher.Flux;
 @SpringBootApplication
 public class DemoApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
 
-	@Bean
-	CommandLineRunner runner(PersonRepository repository) {
-		return events -> Flux
-			.just("Julien", "Kylie", "Asir", "Theresa", "Rory", "Josh")
-			.map(name -> new Person(null, name, 0))
-			.flatMap(repository::save)
-			.subscribe();
-	}
+    @Bean
+    CommandLineRunner runner(PersonRepository repository) {
+        return events -> {
+
+            var writes = Flux
+                    .just("Julien", "Kylie", "Asir", "Theresa", "Rory", "Josh")
+                    .map(name -> new Person(null, name, 0))
+                    .flatMap(repository::save);
+
+            repository
+                    .deleteAll()
+                    .thenMany(writes)
+                    .subscribe();
+
+        };
+    }
 
 }
 
@@ -37,10 +45,10 @@ public class DemoApplication {
 @NoArgsConstructor
 class Person {
 
-	@Id
-	private String id;
-	private String name;
-	private int age;
+    @Id
+    private String id;
+    private String name;
+    private int age;
 }
 
 interface PersonRepository extends ReactiveMongoRepository<Person, String> {
@@ -51,10 +59,10 @@ interface PersonRepository extends ReactiveMongoRepository<Person, String> {
 @RequiredArgsConstructor
 class PeopleRestController {
 
-	private final PersonRepository repository;
+    private final PersonRepository repository;
 
-	@GetMapping("/people")
-	Flux<Person> people() {
-		return this.repository.findAll();
-	}
+    @GetMapping("/people")
+    Flux<Person> people() {
+        return this.repository.findAll();
+    }
 }
