@@ -27,7 +27,7 @@ public class DemoApplication {
 
             var writes = Flux
                     .just("Julien", "Kylie", "Asir", "Theresa", "Rory", "Josh")
-                    .map(name -> new Person(null, name, 0))
+                    .map(name -> new Person(null, name))
                     .flatMap(repository::save);
 
             repository
@@ -49,7 +49,7 @@ class Person {
     @Id
     private String id;
     private String name;
-    private int age;
+
 }
 
 interface PersonRepository extends ReactiveMongoRepository<Person, String> {
