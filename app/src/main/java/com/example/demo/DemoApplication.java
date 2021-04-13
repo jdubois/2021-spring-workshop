@@ -33,7 +33,8 @@ public class DemoApplication {
             repository
                     .deleteAll()
                     .thenMany(writes)
-                    .subscribe();
+                    .thenMany(repository.findAll())
+                    .subscribe(System.out::println);
 
         };
     }
