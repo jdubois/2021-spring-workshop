@@ -17,7 +17,7 @@ az spring-cloud app deploy \
     -g "$AZ_RESOURCE_GROUP" \
     -s "$AZ_SPRING_CLOUD_NAME" \
     -n person-service \
-    --jar-path target/demo-0.0.1-SNAPSHOT.jar \
+    --jar-path target/*-SNAPSHOT.jar \
     | jq
 
 az spring-cloud app logs \
