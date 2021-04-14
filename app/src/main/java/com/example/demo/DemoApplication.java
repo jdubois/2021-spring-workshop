@@ -9,35 +9,33 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Stream;
+
 @SpringBootApplication
 public class DemoApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(DemoApplication.class, args);
+	}
 
-    @Bean
-    CommandLineRunner runner(PersonRepository repository) {
-        return events -> {
-
-            var writes = Flux
-                    .just("Julien", "Kylie", "Asir", "Theresa", "Rory", "Josh")
-                    .map(name -> new Person(null, name))
-                    .flatMap(repository::save);
-
-            repository
-                    .deleteAll()
-                    .thenMany(writes)
-                    .thenMany(repository.findAll())
-                    .subscribe(System.out::println);
-
-        };
-    }
+	@Bean
+	CommandLineRunner runner(PersonRepository repository) {
+		return events -> {
+			repository.deleteAll();
+			Stream.of("Julien", "Kylie", "Asir", "Theresa", "Rory", "Josh")
+				.map(name -> new Person(null, name))
+				.forEach(repository::save);
+			repository.findAll().forEach(System.out::println);
+		};
+	}
 
 }
 
@@ -46,13 +44,13 @@ public class DemoApplication {
 @NoArgsConstructor
 class Person {
 
-    @Id
-    private String id;
-    private String name;
+	@Id
+	private String id;
+	private String name;
 
 }
 
-interface PersonRepository extends ReactiveMongoRepository<Person, String> {
+interface PersonRepository extends MongoRepository<Person, String> {
 }
 
 
@@ -60,10 +58,10 @@ interface PersonRepository extends ReactiveMongoRepository<Person, String> {
 @RequiredArgsConstructor
 class PeopleRestController {
 
-    private final PersonRepository repository;
+	private final PersonRepository repository;
 
-    @GetMapping("/people")
-    Flux<Person> people() {
-        return this.repository.findAll();
-    }
+	@GetMapping("/people")
+	Collection<Person> people() {
+		return this.repository.findAll();
+	}
 }
